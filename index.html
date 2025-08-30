@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Expense Tracker</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-analytics.js";
+        
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyB8a2OZOHaFIkcfZlSG3jM56qRP09YMVYM",
+            authDomain: "expense-tracker-app-cb9b2.firebaseapp.com",
+            projectId: "expense-tracker-app-cb9b2",
+            storageBucket: "expense-tracker-app-cb9b2.firebasestorage.app",
+            messagingSenderId: "1053566711566",
+            appId: "1:1053566711566:web:42d1a1e17f7aa32743495f",
+            measurementId: "G-G2LFCXC9LG"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const analytics = getAnalytics(app);
+        
+        // Make Firebase functions globally available
+        window.firebaseDB = {
+            collection: (name) => ({
+                add: (data) => {
+                    return addDoc(collection(db, name), data);
+                },
+                get: () => {
+                    const q = query(collection(db, name), orderBy('timestamp', 'desc'));
+                    return getDocs(q);
+                },
+                doc: (id) => ({
+                    delete: () => {
+                        return deleteDoc(doc(db, name, id));
+                    },
+                    update: (data) => {
+                        return updateDoc(doc(db, name, id), data);
+                    }
+                })
+            })
+        };
+        
+        // Signal that Firebase is ready
+        window.firebaseReady = true;
+        window.dispatchEvent(new Event('firebaseReady'));
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', sans-serif;
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+        .gradient-button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            transition: all 0.3s ease;
+        }
+        .gradient-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .category-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: white;
+        }
+        .expense-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid #667eea;
+        }
+        .expense-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .stats-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Firebase Configuration (Replace with your Firebase config)
+        const firebaseConfig = {
+            // Add your Firebase config here
+            // For demo purposes, we'll use localStorage instead
+            apiKey: "demo-key",
+            authDomain: "demo-project.firebaseapp.com",
+            projectId: "demo-project",
+        };
+
+        // Categories with icons and colors
+        const CATEGORIES = {
+            'Rent/EMI': { icon: 'fa-home', color: '#FF6B6B' },
+            'Electricity Bill': { icon: 'fa-bolt', color: '#4ECDC4' },
+            'Internet': { icon: 'fa-wifi', color: '#45B7D1' },
+            'Phone Bill': { icon: 'fa-phone', color: '#96CEB4' },
+            'Insurance': { icon: 'fa-shield-alt', color: '#FECA57' },
+            'School/College Fees': { icon: 'fa-graduation-cap', color: '#FF9FF3' },
+            'Subscriptions': { icon: 'fa-play-circle', color: '#54A0FF' },
+            'Grocery': { icon: 'fa-shopping-cart', color: '#5F27CD' },
+            'Dining Out': { icon: 'fa-utensils', color: '#00D2D3' },
+            'Shopping': { icon: 'fa-shopping-bag', color: '#FF6348' },
+            'Entertainment': { icon: 'fa-film', color: '#2ED573' },
+            'Personal Care': { icon: 'fa-cut', color: '#A55EEA' },
+            'Gifts and Celebrations': { icon: 'fa-gift', color: '#FFA502' },
+            'Travel & Holidays': { icon: 'fa-plane', color: '#3742FA' },
+            'Bank Savings': { icon: 'fa-piggy-bank', color: '#2F3542' },
+            'Mutual Funds / SIP': { icon: 'fa-chart-line', color: '#40E0D0' },
+            'Stock Investment': { icon: 'fa-chart-area', color: '#EE5A24' },
+            'PPF / LIC / NPS': { icon: 'fa-university', color: '#009432' },
+            'Medicines': { icon: 'fa-pills', color: '#EA2027' },
+            'Doctor Visits': { icon: 'fa-stethoscope', color: '#006266' },
+            'Health Check-ups': { icon: 'fa-heartbeat', color: '#1B1464' },
+            'Fuel': { icon: 'fa-gas-pump', color: '#5758BB' },
+            'Public Transport': { icon: 'fa-bus', color: '#6F1E51' },
+            'Vehicle Maintenance': { icon: 'fa-tools', color: '#833471' },
+            'Courses': { icon: 'fa-book', color: '#18DCFF' },
+            'Online Learning': { icon: 'fa-laptop', color: '#7D5FFF' },
+            'House Help Salary': { icon: 'fa-user-friends', color: '#B33771' },
+            'Utility Bills': { icon: 'fa-file-invoice-dollar', color: '#3D4454' },
+            'Office': { icon: 'fa-briefcase', color: '#2C2C54' },
+            'Bank Charges': { icon: 'fa-credit-card', color: '#F79F1F' },
+            'Miscellaneous': { icon: 'fa-question-circle', color: '#A4B0BE' }
+        };
+
+        // Demo Firebase replacement using localStorage
+        const mockFirebase = {
+            collection: (name) => ({
+                add: (data) => {
+                    const expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
+                    const newExpense = { ...data, id: Date.now().toString() };
+                    expenses.push(newExpense);
+                    localStorage.setItem('expenses', JSON.stringify(expenses));
+                    return Promise.resolve({ id: newExpense.id });
+                },
+                get: () => {
+                    const expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
+                    return Promise.resolve({
+                        docs: expenses.map(exp => ({ id: exp.id, data: () => exp }))
+                    });
+                },
+                doc: (id) => ({
+                    delete: () => {
+                        const expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
+                        const filtered = expenses.filter(exp => exp.id !== id);
+                        localStorage.setItem('expenses', JSON.stringify(filtered));
+                        return Promise.resolve();
+                    },
+                    update: (data) => {
+                        const expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
+                        const index = expenses.findIndex(exp => exp.id === id);
+                        if (index !== -1) {
+                            expenses[index] = { ...expenses[index], ...data };
+                            localStorage.setItem('expenses', JSON.stringify(expenses));
+                        }
+                        return Promise.resolve();
+                    }
+                })
+            })
+        };
+
+        function ExpenseTracker() {
+            const [expenses, setExpenses] = useState([]);
+            const [showForm, setShowForm] = useState(false);
+            const [editingExpense, setEditingExpense] = useState(null);
+            const [currentView, setCurrentView] = useState('dashboard');
+            const [formData, setFormData] = useState({
+                date: new Date().toISOString().split('T')[0],
+                category: '',
+                type: 'Need',
+                item: '',
+                amount: ''
+            });
+
+            useEffect(() => {
+                loadExpenses();
+            }, []);
+
+            const loadExpenses = async () => {
+                if (!window.firebaseDB) return;
+                try {
+                    const snapshot = await window.firebaseDB.collection('expenses').get();
+                    const expenseList = snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    }));
+                    setExpenses(expenseList.sort((a, b) => new Date(b.date) - new Date(a.date)));
+                } catch (error) {
+                    console.error('Error loading expenses:', error);
+                    alert('Failed to load expenses. Please check your internet connection.');
+                }
+            };
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                if (!window.firebaseDB) return;
+                try {
+                    if (editingExpense) {
+                        await window.firebaseDB.collection('expenses').doc(editingExpense.id).update(formData);
+                    } else {
+                        await window.firebaseDB.collection('expenses').add({
+                            ...formData,
+                            amount: parseFloat(formData.amount),
+                            timestamp: new Date()
+                        });
+                    }
+                    
+                    setFormData({
+                        date: new Date().toISOString().split('T')[0],
+                        category: '',
+                        type: 'Need',
+                        item: '',
+                        amount: ''
+                    });
+                    setShowForm(false);
+                    setEditingExpense(null);
+                    loadExpenses();
+                } catch (error) {
+                    console.error('Error saving expense:', error);
+                    alert('Failed to save expense. Please try again.');
+                }
+            };
+
+            const handleEdit = (expense) => {
+                setFormData({
+                    date: expense.date,
+                    category: expense.category,
+                    type: expense.type,
+                    item: expense.item,
+                    amount: expense.amount.toString()
+                });
+                setEditingExpense(expense);
+                setShowForm(true);
+            };
+
+            const handleDelete = async (id) => {
+                if (confirm('Are you sure you want to delete this expense?')) {
+                    if (!window.firebaseDB) return;
+                    try {
+                        await window.firebaseDB.collection('expenses').doc(id).delete();
+                        loadExpenses();
+                    } catch (error) {
+                        console.error('Error deleting expense:', error);
+                        alert('Failed to delete expense. Please try again.');
+                    }
+                }
+            };
+
+            const getStats = () => {
+                const total = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+                const needs = expenses.filter(exp => exp.type === 'Need').reduce((sum, exp) => sum + exp.amount, 0);
+                const wants = expenses.filter(exp => exp.type === 'Want').reduce((sum, exp) => sum + exp.amount, 0);
+                const thisMonth = expenses.filter(exp => {
+                    const expDate = new Date(exp.date);
+                    const now = new Date();
+                    return expDate.getMonth() === now.getMonth() && expDate.getFullYear() === now.getFullYear();
+                }).reduce((sum, exp) => sum + exp.amount, 0);
+
+                return { total, needs, wants, thisMonth };
+            };
+
+            const stats = getStats();
+
+            const ExpenseForm = () => (
+                <div className="glass-effect p-6 mb-6">
+                    <h2 className="text-2xl font-bold text-white mb-4">
+                        {editingExpense ? 'Edit Expense' : 'Add New Expense'}
+                    </h2>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-white mb-2">Date</label>
+                                <input
+                                    type="date"
+                                    value={formData.date}
+                                    onChange={(e) => setFormData({...formData, date: e.target.value})}
+                                    className="w-full p-3 rounded-lg border-0 bg-white/20 text-white placeholder-white/70 focus:ring-2 focus:ring-white/50"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-white mb-2">Category</label>
+                                <select
+                                    value={formData.category}
+                                    onChange={(e) => setFormData({...formData, category: e.target.value})}
+                                    className="w-full p-3 rounded-lg border-0 bg-white/20 text-white focus:ring-2 focus:ring-white/50"
+                                    required
+                                >
+                                    <option value="">Select Category</option>
+                                    {Object.keys(CATEGORIES).map(category => (
+                                        <option key={category} value={category} className="text-gray-800">
+                                            {category}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-white mb-2">Type</label>
+                                <select
+                                    value={formData.type}
+                                    onChange={(e) => setFormData({...formData, type: e.target.value})}
+                                    className="w-full p-3 rounded-lg border-0 bg-white/20 text-white focus:ring-2 focus:ring-white/50"
+                                    required
+                                >
+                                    <option value="Need" className="text-gray-800">Need</option>
+                                    <option value="Want" className="text-gray-800">Want</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-white mb-2">Amount (Rs.)</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    value={formData.amount}
+                                    onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                                    className="w-full p-3 rounded-lg border-0 bg-white/20 text-white placeholder-white/70 focus:ring-2 focus:ring-white/50"
+                                    placeholder="0.00"
+                                    required
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-white mb-2">Item Description</label>
+                            <input
+                                type="text"
+                                value={formData.item}
+                                onChange={(e) => setFormData({...formData, item: e.target.value})}
+                                className="w-full p-3 rounded-lg border-0 bg-white/20 text-white placeholder-white/70 focus:ring-2 focus:ring-white/50"
+                                placeholder="What did you spend on?"
+                                required
+                            />
+                        </div>
+                        <div className="flex gap-3">
+                            <button
+                                type="submit"
+                                className="gradient-button text-white px-6 py-3 rounded-lg font-semibold flex-1"
+                            >
+                                {editingExpense ? 'Update Expense' : 'Add Expense'}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowForm(false);
+                                    setEditingExpense(null);
+                                    setFormData({
+                                        date: new Date().toISOString().split('T')[0],
+                                        category: '',
+                                        type: 'Need',
+                                        item: '',
+                                        amount: ''
+                                    });
+                                }}
+                                className="bg-white/20 text-white px-6 py-3 rounded-lg font-semibold"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            );
+
+            const StatsCards = () => (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div className="stats-card glass-effect p-4 text-center">
+                        <i className="fas fa-rupee-sign text-3xl text-white mb-2"></i>
+                        <h3 className="text-white text-lg font-semibold">Total</h3>
+                        <p className="text-white text-xl font-bold">₹{stats.total.toFixed(2)}</p>
+                    </div>
+                    <div className="stats-card glass-effect p-4 text-center">
+                        <i className="fas fa-calendar text-3xl text-white mb-2"></i>
+                        <h3 className="text-white text-lg font-semibold">This Month</h3>
+                        <p className="text-white text-xl font-bold">₹{stats.thisMonth.toFixed(2)}</p>
+                    </div>
+                    <div className="stats-card glass-effect p-4 text-center">
+                        <i className="fas fa-heart text-3xl text-green-300 mb-2"></i>
+                        <h3 className="text-white text-lg font-semibold">Needs</h3>
+                        <p className="text-green-300 text-xl font-bold">₹{stats.needs.toFixed(2)}</p>
+                    </div>
+                    <div className="stats-card glass-effect p-4 text-center">
+                        <i className="fas fa-star text-3xl text-yellow-300 mb-2"></i>
+                        <h3 className="text-white text-lg font-semibold">Wants</h3>
+                        <p className="text-yellow-300 text-xl font-bold">₹{stats.wants.toFixed(2)}</p>
+                    </div>
+                </div>
+            );
+
+            const ExpenseList = () => (
+                <div className="glass-effect p-6">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-2xl font-bold text-white">Recent Expenses</h2>
+                        <span className="text-white/70">{expenses.length} expenses</span>
+                    </div>
+                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                        {expenses.map(expense => {
+                            const categoryInfo = CATEGORIES[expense.category] || CATEGORIES['Miscellaneous'];
+                            return (
+                                <div key={expense.id} className="expense-card bg-white/10 p-4 rounded-lg flex items-center justify-between">
+                                    <div className="flex items-center space-x-4">
+                                        <div 
+                                            className="category-icon"
+                                            style={{ backgroundColor: categoryInfo.color }}
+                                        >
+                                            <i className={`fas ${categoryInfo.icon}`}></i>
+                                        </div>
+                                        <div>
+                                            <h4 className="text-white font-semibold">{expense.item}</h4>
+                                            <p className="text-white/70 text-sm">
+                                                {expense.category} • {expense.date} • 
+                                                <span className={`ml-1 px-2 py-1 rounded-full text-xs ${
+                                                    expense.type === 'Need' ? 'bg-green-500/20 text-green-300' : 'bg-yellow-500/20 text-yellow-300'
+                                                }`}>
+                                                    {expense.type}
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center space-x-3">
+                                        <span className="text-white text-lg font-bold">₹{expense.amount.toFixed(2)}</span>
+                                        <div className="flex space-x-2">
+                                            <button
+                                                onClick={() => handleEdit(expense)}
+                                                className="text-white/70 hover:text-white transition-colors"
+                                            >
+                                                <i className="fas fa-edit"></i>
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(expense.id)}
+                                                className="text-red-400 hover:text-red-300 transition-colors"
+                                            >
+                                                <i className="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                        {expenses.length === 0 && (
+                            <div className="text-center py-8">
+                                <i className="fas fa-receipt text-4xl text-white/30 mb-4"></i>
+                                <p className="text-white/50">No expenses recorded yet</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+
+            return (
+                <div className="max-w-6xl mx-auto">
+                    {/* Header */}
+                    <div className="glass-effect p-6 mb-6 text-center">
+                        <h1 className="text-4xl font-bold text-white mb-2">
+                            <i className="fas fa-wallet mr-3"></i>
+                            Personal Expense Tracker
+                        </h1>
+                        <p className="text-white/80">Track your spending, manage your budget</p>
+                        {isFirebaseReady ? (
+                            <div className="mt-3 bg-green-500/20 text-green-300 px-4 py-2 rounded-lg text-sm">
+                                <i className="fas fa-check-circle mr-2"></i>
+                                Connected to Firebase Cloud Database
+                            </div>
+                        ) : (
+                            <div className="mt-3 bg-blue-500/20 text-blue-300 px-4 py-2 rounded-lg text-sm">
+                                <i className="fas fa-spinner fa-spin mr-2"></i>
+                                Connecting to Firebase...
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Navigation */}
+                    <div className="glass-effect p-4 mb-6">
+                        <div className="flex flex-wrap justify-center gap-4">
+                            <button
+                                onClick={() => setCurrentView('dashboard')}
+                                className={`px-4 py-2 rounded-lg transition-colors ${
+                                    currentView === 'dashboard' ? 'bg-white/30 text-white' : 'text-white/70 hover:text-white'
+                                }`}
+                            >
+                                <i className="fas fa-chart-pie mr-2"></i>Dashboard
+                            </button>
+                            <button
+                                onClick={() => setShowForm(!showForm)}
+                                className="gradient-button px-4 py-2 rounded-lg text-white font-semibold"
+                            >
+                                <i className="fas fa-plus mr-2"></i>Add Expense
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Content */}
+                    {showForm && <ExpenseForm />}
+                    
+                    {currentView === 'dashboard' && (
+                        <>
+                            <StatsCards />
+                            <ExpenseList />
+                        </>
+                    )}
+                </div>
+            );
+        }
+
+        ReactDOM.render(<ExpenseTracker />, document.getElementById('root'));
+    </script>
+</body>
+</html>
