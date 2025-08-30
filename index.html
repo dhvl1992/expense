@@ -523,20 +523,6 @@
         const analytics = getAnalytics(app);
         console.log('Firebase initialized successfully');
         
-        // Test Firebase connection
-        async function testFirebaseConnection() {
-            try {
-                console.log('Testing Firebase connection...');
-                const testQuery = query(collection(db, 'expenses'));
-                await getDocs(testQuery);
-                console.log('Firebase connection test successful');
-                return true;
-            } catch (error) {
-                console.error('Firebase connection test failed:', error);
-                return false;
-            }
-        }
-        
         // Global variables
         let expenses = [];
         let editingExpenseId = null;
@@ -601,32 +587,38 @@
         
         // Initialize app
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('DOM loaded, initializing app...');
+            console.log('=== STARTING APP ===');
             
             // Set today's date as default
             dateInput.value = new Date().toISOString().split('T')[0];
             
-            // Test connection first
-            const connectionOk = await testFirebaseConnection();
+            // Update status to show we're trying to connect
+            statusEl.className = 'status connecting';
+            statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing Firebase Connection...';
             
-            if (connectionOk) {
+            try {
+                // Test connection first
+                console.log('Testing Firebase connection...');
+                const testQuery = query(collection(db, 'expenses'));
+                const testSnapshot = await getDocs(testQuery);
+                console.log('✅ Firebase connection successful!');
+                
                 // Update status to connected
                 statusEl.className = 'status connected';
                 statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Connected to Firebase Cloud Database';
                 
-                // Check security settings
+                // NOW check security settings
+                console.log('Checking security settings...');
                 const isSecured = localStorage.getItem('expenseAppSecured');
+                console.log('Security setting:', isSecured);
                 
                 if (isSecured === null) {
                     // First time - show security warning
-                    document.getElementById('securityCheck').style.display = 'block';
-                    // Hide main app initially
-                    document.querySelector('.stats-grid').style.display = 'none';
-                    document.querySelectorAll('.card:not(#securityCheck)').forEach(card => {
-                        card.style.display = 'none';
-                    });
+                    console.log('First time user - showing security warning');
+                    showSecurityWarning();
                 } else if (isSecured === 'true') {
                     // Security enabled - check password
+                    console.log('Security enabled - checking password');
                     if (checkPassword()) {
                         startMainApp();
                     } else {
@@ -635,22 +627,48 @@
                     }
                 } else {
                     // User chose to continue unsafely
+                    console.log('User chose unsafe mode');
                     startMainApp();
                 }
-            } else {
+                
+            } catch (error) {
+                console.error('❌ Firebase connection failed:', error);
+                
                 // Show connection error
                 statusEl.className = 'status';
                 statusEl.style.background = '#fef2f2';
                 statusEl.style.color = '#dc2626';
                 statusEl.style.border = '1px solid #fecaca';
-                statusEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Firebase Connection Failed - Check Console & Security Rules';
+                statusEl.innerHTML = `
+                    <i class="fas fa-exclamation-triangle"></i> 
+                    Firebase Connection Failed: ${error.message}
+                    <br><small>Check console for details</small>
+                `;
+                
+                // Hide other elements if connection fails
+                document.querySelector('.stats-grid').style.display = 'none';
+                document.querySelectorAll('.card').forEach(card => {
+                    card.style.display = 'none';
+                });
             }
             
-            // Event listeners
+            // Event listeners (always set these up)
+            console.log('Setting up event listeners...');
             toggleFormBtn.addEventListener('click', toggleForm);
             cancelFormBtn.addEventListener('click', toggleForm);
             addExpenseForm.addEventListener('submit', handleSubmit);
+            console.log('✅ Event listeners ready');
         });
+        
+        function showSecurityWarning() {
+            console.log('Showing security warning');
+            document.getElementById('securityCheck').style.display = 'block';
+            // Hide main app initially
+            document.querySelector('.stats-grid').style.display = 'none';
+            document.querySelectorAll('.card:not(#securityCheck)').forEach(card => {
+                card.style.display = 'none';
+            });
+        }
         
         // Toggle form visibility
         function toggleForm() {
