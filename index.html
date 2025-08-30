@@ -567,13 +567,13 @@
             localStorage.setItem('expenseAppSecured', 'true');
             
             alert('✅ Basic security enabled! Your data now requires a password to access.');
-            initializeApp();
+            startMainApp();
         }
         
         window.continueUnsafe = function() {
             if (confirm('⚠️ Are you SURE you want to continue with PUBLIC data?\n\nAnyone on the internet can:\n• See all your expenses\n• See how much you spend\n• Add fake data\n• Delete your expenses\n\nClick OK only if you understand the risks.')) {
                 localStorage.setItem('expenseAppSecured', 'false');
-                initializeApp();
+                startMainApp();
             }
         }
         
@@ -587,7 +587,7 @@
             return btoa(inputPassword) === savedPassword;
         }
         
-        function initializeApp() {
+        function startMainApp() {
             document.getElementById('securityCheck').style.display = 'none';
             
             // Show main app
@@ -628,14 +628,14 @@
                 } else if (isSecured === 'true') {
                     // Security enabled - check password
                     if (checkPassword()) {
-                        initializeApp();
+                        startMainApp();
                     } else {
                         alert('❌ Incorrect password. Refresh page to try again.');
                         return;
                     }
                 } else {
                     // User chose to continue unsafely
-                    initializeApp();
+                    startMainApp();
                 }
             } else {
                 // Show connection error
