@@ -4,17 +4,457 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Personal Expense Tracker</title>
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #334155;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: #475569;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #1e293b;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.8;
+            color: #64748b;
+        }
+
+        .status {
+            text-align: center;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .status.connected {
+            background: #f0f9f4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .status.connecting {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: #f8fafc;
+            color: #374151;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .stat-card i {
+            font-size: 2em;
+            margin-bottom: 10px;
+            display: block;
+            color: #6b7280;
+        }
+
+        .stat-card h3 {
+            font-size: 1.1em;
+            margin-bottom: 5px;
+            color: #4b5563;
+        }
+
+        .stat-card .amount {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #4f46e5;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #4338ca;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+            margin-left: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #374151;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .btn-edit {
+            background: #2563eb;
+            color: white;
+            padding: 8px 12px;
+            font-size: 14px;
+            margin-right: 5px;
+        }
+
+        .btn-edit:hover {
+            background: #1d4ed8;
+        }
+
+        .expense-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .expense-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+            transition: background-color 0.3s;
+        }
+
+        .expense-item:hover {
+            background-color: #f8fafc;
+        }
+
+        .expense-info {
+            flex-grow: 1;
+        }
+
+        .expense-info h4 {
+            margin-bottom: 5px;
+            color: #1f2937;
+        }
+
+        .expense-meta {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .expense-type {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .expense-type.need {
+            background: #f0fdf4;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+        }
+
+        .expense-type.want {
+            background: #fefce8;
+            color: #ca8a04;
+            border: 1px solid #fde047;
+        }
+
+        .expense-amount {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1f2937;
+            margin-right: 15px;
+        }
+
+        .expense-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: #6b7280;
+        }
+
+        .empty-state i {
+            font-size: 4em;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        #toggleForm {
+            margin-bottom: 20px;
+        }
+
+        .form-section.hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .expense-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .expense-amount {
+                margin-right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1><i class="fas fa-wallet"></i> Personal Expense Tracker</h1>
+            <p>Track your spending, manage your budget</p>
+        </div>
+
+        <!-- Status -->
+        <div id="status" class="status connecting">
+            <i class="fas fa-spinner fa-spin"></i> Connecting to Firebase...
+        </div>
+
+        <!-- Stats Dashboard -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <i class="fas fa-rupee-sign"></i>
+                <h3>Total Expenses</h3>
+                <div class="amount" id="totalAmount">₹0.00</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-calendar"></i>
+                <h3>This Month</h3>
+                <div class="amount" id="monthAmount">₹0.00</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-heart"></i>
+                <h3>Needs</h3>
+                <div class="amount" id="needsAmount">₹0.00</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-star"></i>
+                <h3>Wants</h3>
+                <div class="amount" id="wantsAmount">₹0.00</div>
+            </div>
+        </div>
+
+        <!-- Add Expense Form -->
+        <div class="card">
+            <button id="toggleForm" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add New Expense
+            </button>
+            
+            <div id="expenseForm" class="form-section hidden">
+                <h2 style="margin-bottom: 20px;">Add New Expense</h2>
+                <form id="addExpenseForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="date">Date</label>
+                            <input type="date" id="date" name="date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="category">Category</label>
+                            <select id="category" name="category" required>
+                                <option value="">Select Category</option>
+                                <option value="Rent/EMI">Rent/EMI</option>
+                                <option value="Electricity Bill">Electricity Bill</option>
+                                <option value="Internet">Internet</option>
+                                <option value="Phone Bill">Phone Bill</option>
+                                <option value="Insurance">Insurance (Health, Life, Vehicle)</option>
+                                <option value="School/College Fees">School/College Fees</option>
+                                <option value="Subscriptions">Subscriptions (Netflix, Prime, etc.)</option>
+                                <option value="Grocery">Grocery</option>
+                                <option value="Dining Out">Dining Out</option>
+                                <option value="Shopping">Shopping (Clothes, Gadgets)</option>
+                                <option value="Entertainment">Entertainment (Movies, Games)</option>
+                                <option value="Personal Care">Personal Care (Salon, Spa)</option>
+                                <option value="Gifts and Celebrations">Gifts and Celebrations</option>
+                                <option value="Travel & Holidays">Travel & Holidays</option>
+                                <option value="Bank Savings">Bank Savings</option>
+                                <option value="Recurring Deposit">Recurring Deposit (RD)</option>
+                                <option value="Fixed Deposit">Fixed Deposit (FD)</option>
+                                <option value="Mutual Funds / SIP">Mutual Funds / SIP</option>
+                                <option value="Stock Investment">Stock Investment</option>
+                                <option value="PPF / LIC / NPS">PPF / LIC / NPS</option>
+                                <option value="Medicines">Medicines</option>
+                                <option value="Doctor Visits">Doctor Visits</option>
+                                <option value="Emergency Health Fund">Emergency Health Fund</option>
+                                <option value="Health Check-ups">Health Check-ups</option>
+                                <option value="Baby or Family Medical Needs">Baby or Family Medical Needs</option>
+                                <option value="Fuel">Fuel</option>
+                                <option value="Public Transport">Public Transport</option>
+                                <option value="Cab/Rickshaw">Cab/Rickshaw</option>
+                                <option value="Vehicle Maintenance">Vehicle Maintenance</option>
+                                <option value="Parking Charges">Parking Charges</option>
+                                <option value="Courses">Courses</option>
+                                <option value="Books">Books</option>
+                                <option value="Online Learning Platforms">Online Learning Platforms (Udemy, Coursera)</option>
+                                <option value="Workshop Fees">Workshop Fees</option>
+                                <option value="House Help Salary">House Help Salary</option>
+                                <option value="Cleaning Supplies">Cleaning Supplies</option>
+                                <option value="Gas Cylinder">Gas Cylinder/ Bill</option>
+                                <option value="Water Bill">Water Bill</option>
+                                <option value="Charity">Charity</option>
+                                <option value="Temple Donation">Temple Donation</option>
+                                <option value="Helping Others in Village">Helping Others in Village</option>
+                                <option value="House Utility">House Utility</option>
+                                <option value="Office">Office</option>
+                                <option value="Bank Charges">Bank Charges</option>
+                                <option value="Miscellaneous">Misc. fasttag</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="type">Type</label>
+                            <select id="type" name="type" required>
+                                <option value="Need">Need</option>
+                                <option value="Want">Want</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="amount">Amount (Rs.)</label>
+                            <input type="number" id="amount" name="amount" step="0.01" min="0" placeholder="0.00" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="item">Item Description</label>
+                        <input type="text" id="item" name="item" placeholder="What did you spend on?" required>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Add Expense
+                        </button>
+                        <button type="button" id="cancelForm" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Expenses List -->
+        <div class="card">
+            <h2 style="margin-bottom: 20px;">Recent Expenses</h2>
+            <div id="expensesList" class="expense-list">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading expenses...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Scripts -->
     <script type="module">
-        // Import the functions you need from the SDKs you need
+        // Import Firebase functions
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-analytics.js";
         
-        // Your web app's Firebase configuration
+        // Your Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyB8a2OZOHaFIkcfZlSG3jM56qRP09YMVYM",
             authDomain: "expense-tracker-app-cb9b2.firebaseapp.com",
@@ -30,502 +470,201 @@
         const db = getFirestore(app);
         const analytics = getAnalytics(app);
         
-        // Make Firebase functions globally available
-        window.firebaseDB = {
-            collection: (name) => ({
-                add: (data) => {
-                    return addDoc(collection(db, name), data);
-                },
-                get: () => {
-                    const q = query(collection(db, name), orderBy('timestamp', 'desc'));
-                    return getDocs(q);
-                },
-                doc: (id) => ({
-                    delete: () => {
-                        return deleteDoc(doc(db, name, id));
-                    },
-                    update: (data) => {
-                        return updateDoc(doc(db, name, id), data);
-                    }
-                })
-            })
-        };
+        // Global variables
+        let expenses = [];
+        let editingExpenseId = null;
         
-        // Signal that Firebase is ready
-        window.firebaseReady = true;
-        window.dispatchEvent(new Event('firebaseReady'));
-    </script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            font-family: 'Inter', sans-serif;
+        // DOM elements
+        const statusEl = document.getElementById('status');
+        const toggleFormBtn = document.getElementById('toggleForm');
+        const expenseForm = document.getElementById('expenseForm');
+        const addExpenseForm = document.getElementById('addExpenseForm');
+        const cancelFormBtn = document.getElementById('cancelForm');
+        const expensesListEl = document.getElementById('expensesList');
+        const dateInput = document.getElementById('date');
+        
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set today's date as default
+            dateInput.value = new Date().toISOString().split('T')[0];
+            
+            // Load expenses
+            loadExpenses();
+            
+            // Event listeners
+            toggleFormBtn.addEventListener('click', toggleForm);
+            cancelFormBtn.addEventListener('click', toggleForm);
+            addExpenseForm.addEventListener('submit', handleSubmit);
+        });
+        
+        // Update Firebase connection status
+        statusEl.className = 'status connected';
+        statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Connected to Firebase Cloud Database';
+        
+        // Toggle form visibility
+        function toggleForm() {
+            const isHidden = expenseForm.classList.contains('hidden');
+            if (isHidden) {
+                expenseForm.classList.remove('hidden');
+                toggleFormBtn.innerHTML = '<i class="fas fa-minus"></i> Cancel';
+            } else {
+                expenseForm.classList.add('hidden');
+                toggleFormBtn.innerHTML = '<i class="fas fa-plus"></i> Add New Expense';
+                resetForm();
+            }
         }
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        
+        // Reset form
+        function resetForm() {
+            addExpenseForm.reset();
+            dateInput.value = new Date().toISOString().split('T')[0];
+            editingExpenseId = null;
+            document.querySelector('#expenseForm h2').textContent = 'Add New Expense';
+            document.querySelector('#addExpenseForm button[type="submit"]').innerHTML = '<i class="fas fa-save"></i> Add Expense';
         }
-        .gradient-button {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            transition: all 0.3s ease;
-        }
-        .gradient-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
-        .category-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            color: white;
-        }
-        .expense-card {
-            transition: all 0.3s ease;
-            border-left: 4px solid #667eea;
-        }
-        .expense-card:hover {
-            transform: translateX(5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        .stats-card {
-            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
-        }
-    </style>
-</head>
-<body class="min-h-screen p-4">
-    <div id="root"></div>
-
-    <script type="text/babel">
-        const { useState, useEffect } = React;
-
-        // Firebase Configuration (Replace with your Firebase config)
-        const firebaseConfig = {
-            // Add your Firebase config here
-            // For demo purposes, we'll use localStorage instead
-            apiKey: "demo-key",
-            authDomain: "demo-project.firebaseapp.com",
-            projectId: "demo-project",
-        };
-
-        // Categories with icons and colors
-        const CATEGORIES = {
-            'Rent/EMI': { icon: 'fa-home', color: '#FF6B6B' },
-            'Electricity Bill': { icon: 'fa-bolt', color: '#4ECDC4' },
-            'Internet': { icon: 'fa-wifi', color: '#45B7D1' },
-            'Phone Bill': { icon: 'fa-phone', color: '#96CEB4' },
-            'Insurance': { icon: 'fa-shield-alt', color: '#FECA57' },
-            'School/College Fees': { icon: 'fa-graduation-cap', color: '#FF9FF3' },
-            'Subscriptions': { icon: 'fa-play-circle', color: '#54A0FF' },
-            'Grocery': { icon: 'fa-shopping-cart', color: '#5F27CD' },
-            'Dining Out': { icon: 'fa-utensils', color: '#00D2D3' },
-            'Shopping': { icon: 'fa-shopping-bag', color: '#FF6348' },
-            'Entertainment': { icon: 'fa-film', color: '#2ED573' },
-            'Personal Care': { icon: 'fa-cut', color: '#A55EEA' },
-            'Gifts and Celebrations': { icon: 'fa-gift', color: '#FFA502' },
-            'Travel & Holidays': { icon: 'fa-plane', color: '#3742FA' },
-            'Bank Savings': { icon: 'fa-piggy-bank', color: '#2F3542' },
-            'Mutual Funds / SIP': { icon: 'fa-chart-line', color: '#40E0D0' },
-            'Stock Investment': { icon: 'fa-chart-area', color: '#EE5A24' },
-            'PPF / LIC / NPS': { icon: 'fa-university', color: '#009432' },
-            'Medicines': { icon: 'fa-pills', color: '#EA2027' },
-            'Doctor Visits': { icon: 'fa-stethoscope', color: '#006266' },
-            'Health Check-ups': { icon: 'fa-heartbeat', color: '#1B1464' },
-            'Fuel': { icon: 'fa-gas-pump', color: '#5758BB' },
-            'Public Transport': { icon: 'fa-bus', color: '#6F1E51' },
-            'Vehicle Maintenance': { icon: 'fa-tools', color: '#833471' },
-            'Courses': { icon: 'fa-book', color: '#18DCFF' },
-            'Online Learning': { icon: 'fa-laptop', color: '#7D5FFF' },
-            'House Help Salary': { icon: 'fa-user-friends', color: '#B33771' },
-            'Utility Bills': { icon: 'fa-file-invoice-dollar', color: '#3D4454' },
-            'Office': { icon: 'fa-briefcase', color: '#2C2C54' },
-            'Bank Charges': { icon: 'fa-credit-card', color: '#F79F1F' },
-            'Miscellaneous': { icon: 'fa-question-circle', color: '#A4B0BE' }
-        };
-
-        // Demo Firebase replacement using localStorage
-        const mockFirebase = {
-            collection: (name) => ({
-                add: (data) => {
-                    const expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
-                    const newExpense = { ...data, id: Date.now().toString() };
-                    expenses.push(newExpense);
-                    localStorage.setItem('expenses', JSON.stringify(expenses));
-                    return Promise.resolve({ id: newExpense.id });
-                },
-                get: () => {
-                    const expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
-                    return Promise.resolve({
-                        docs: expenses.map(exp => ({ id: exp.id, data: () => exp }))
-                    });
-                },
-                doc: (id) => ({
-                    delete: () => {
-                        const expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
-                        const filtered = expenses.filter(exp => exp.id !== id);
-                        localStorage.setItem('expenses', JSON.stringify(filtered));
-                        return Promise.resolve();
-                    },
-                    update: (data) => {
-                        const expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
-                        const index = expenses.findIndex(exp => exp.id === id);
-                        if (index !== -1) {
-                            expenses[index] = { ...expenses[index], ...data };
-                            localStorage.setItem('expenses', JSON.stringify(expenses));
-                        }
-                        return Promise.resolve();
-                    }
-                })
-            })
-        };
-
-        function ExpenseTracker() {
-            const [expenses, setExpenses] = useState([]);
-            const [showForm, setShowForm] = useState(false);
-            const [editingExpense, setEditingExpense] = useState(null);
-            const [currentView, setCurrentView] = useState('dashboard');
-            const [formData, setFormData] = useState({
-                date: new Date().toISOString().split('T')[0],
-                category: '',
-                type: 'Need',
-                item: '',
-                amount: ''
-            });
-
-            useEffect(() => {
+        
+        // Handle form submission
+        async function handleSubmit(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(addExpenseForm);
+            const expenseData = {
+                date: formData.get('date'),
+                category: formData.get('category'),
+                type: formData.get('type'),
+                item: formData.get('item'),
+                amount: parseFloat(formData.get('amount')),
+                timestamp: new Date()
+            };
+            
+            try {
+                if (editingExpenseId) {
+                    // Update existing expense
+                    await updateDoc(doc(db, 'expenses', editingExpenseId), expenseData);
+                } else {
+                    // Add new expense
+                    await addDoc(collection(db, 'expenses'), expenseData);
+                }
+                
+                toggleForm();
                 loadExpenses();
-            }, []);
-
-            const loadExpenses = async () => {
-                if (!window.firebaseDB) return;
-                try {
-                    const snapshot = await window.firebaseDB.collection('expenses').get();
-                    const expenseList = snapshot.docs.map(doc => ({
+                
+            } catch (error) {
+                console.error('Error saving expense:', error);
+                alert('Failed to save expense. Please try again.');
+            }
+        }
+        
+        // Load expenses from Firebase
+        async function loadExpenses() {
+            try {
+                const q = query(collection(db, 'expenses'), orderBy('timestamp', 'desc'));
+                const querySnapshot = await getDocs(q);
+                
+                expenses = [];
+                querySnapshot.forEach((doc) => {
+                    expenses.push({
                         id: doc.id,
                         ...doc.data()
-                    }));
-                    setExpenses(expenseList.sort((a, b) => new Date(b.date) - new Date(a.date)));
-                } catch (error) {
-                    console.error('Error loading expenses:', error);
-                    alert('Failed to load expenses. Please check your internet connection.');
-                }
-            };
-
-            const handleSubmit = async (e) => {
-                e.preventDefault();
-                if (!window.firebaseDB) return;
-                try {
-                    if (editingExpense) {
-                        await window.firebaseDB.collection('expenses').doc(editingExpense.id).update(formData);
-                    } else {
-                        await window.firebaseDB.collection('expenses').add({
-                            ...formData,
-                            amount: parseFloat(formData.amount),
-                            timestamp: new Date()
-                        });
-                    }
-                    
-                    setFormData({
-                        date: new Date().toISOString().split('T')[0],
-                        category: '',
-                        type: 'Need',
-                        item: '',
-                        amount: ''
                     });
-                    setShowForm(false);
-                    setEditingExpense(null);
-                    loadExpenses();
-                } catch (error) {
-                    console.error('Error saving expense:', error);
-                    alert('Failed to save expense. Please try again.');
-                }
-            };
-
-            const handleEdit = (expense) => {
-                setFormData({
-                    date: expense.date,
-                    category: expense.category,
-                    type: expense.type,
-                    item: expense.item,
-                    amount: expense.amount.toString()
                 });
-                setEditingExpense(expense);
-                setShowForm(true);
-            };
-
-            const handleDelete = async (id) => {
-                if (confirm('Are you sure you want to delete this expense?')) {
-                    if (!window.firebaseDB) return;
-                    try {
-                        await window.firebaseDB.collection('expenses').doc(id).delete();
-                        loadExpenses();
-                    } catch (error) {
-                        console.error('Error deleting expense:', error);
-                        alert('Failed to delete expense. Please try again.');
-                    }
-                }
-            };
-
-            const getStats = () => {
-                const total = expenses.reduce((sum, exp) => sum + exp.amount, 0);
-                const needs = expenses.filter(exp => exp.type === 'Need').reduce((sum, exp) => sum + exp.amount, 0);
-                const wants = expenses.filter(exp => exp.type === 'Want').reduce((sum, exp) => sum + exp.amount, 0);
-                const thisMonth = expenses.filter(exp => {
-                    const expDate = new Date(exp.date);
-                    const now = new Date();
-                    return expDate.getMonth() === now.getMonth() && expDate.getFullYear() === now.getFullYear();
-                }).reduce((sum, exp) => sum + exp.amount, 0);
-
-                return { total, needs, wants, thisMonth };
-            };
-
-            const stats = getStats();
-
-            const ExpenseForm = () => (
-                <div className="glass-effect p-6 mb-6">
-                    <h2 className="text-2xl font-bold text-white mb-4">
-                        {editingExpense ? 'Edit Expense' : 'Add New Expense'}
-                    </h2>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-white mb-2">Date</label>
-                                <input
-                                    type="date"
-                                    value={formData.date}
-                                    onChange={(e) => setFormData({...formData, date: e.target.value})}
-                                    className="w-full p-3 rounded-lg border-0 bg-white/20 text-white placeholder-white/70 focus:ring-2 focus:ring-white/50"
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-white mb-2">Category</label>
-                                <select
-                                    value={formData.category}
-                                    onChange={(e) => setFormData({...formData, category: e.target.value})}
-                                    className="w-full p-3 rounded-lg border-0 bg-white/20 text-white focus:ring-2 focus:ring-white/50"
-                                    required
-                                >
-                                    <option value="">Select Category</option>
-                                    {Object.keys(CATEGORIES).map(category => (
-                                        <option key={category} value={category} className="text-gray-800">
-                                            {category}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-white mb-2">Type</label>
-                                <select
-                                    value={formData.type}
-                                    onChange={(e) => setFormData({...formData, type: e.target.value})}
-                                    className="w-full p-3 rounded-lg border-0 bg-white/20 text-white focus:ring-2 focus:ring-white/50"
-                                    required
-                                >
-                                    <option value="Need" className="text-gray-800">Need</option>
-                                    <option value="Want" className="text-gray-800">Want</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-white mb-2">Amount (Rs.)</label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    value={formData.amount}
-                                    onChange={(e) => setFormData({...formData, amount: e.target.value})}
-                                    className="w-full p-3 rounded-lg border-0 bg-white/20 text-white placeholder-white/70 focus:ring-2 focus:ring-white/50"
-                                    placeholder="0.00"
-                                    required
-                                />
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-white mb-2">Item Description</label>
-                            <input
-                                type="text"
-                                value={formData.item}
-                                onChange={(e) => setFormData({...formData, item: e.target.value})}
-                                className="w-full p-3 rounded-lg border-0 bg-white/20 text-white placeholder-white/70 focus:ring-2 focus:ring-white/50"
-                                placeholder="What did you spend on?"
-                                required
-                            />
-                        </div>
-                        <div className="flex gap-3">
-                            <button
-                                type="submit"
-                                className="gradient-button text-white px-6 py-3 rounded-lg font-semibold flex-1"
-                            >
-                                {editingExpense ? 'Update Expense' : 'Add Expense'}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setShowForm(false);
-                                    setEditingExpense(null);
-                                    setFormData({
-                                        date: new Date().toISOString().split('T')[0],
-                                        category: '',
-                                        type: 'Need',
-                                        item: '',
-                                        amount: ''
-                                    });
-                                }}
-                                className="bg-white/20 text-white px-6 py-3 rounded-lg font-semibold"
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            );
-
-            const StatsCards = () => (
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    <div className="stats-card glass-effect p-4 text-center">
-                        <i className="fas fa-rupee-sign text-3xl text-white mb-2"></i>
-                        <h3 className="text-white text-lg font-semibold">Total</h3>
-                        <p className="text-white text-xl font-bold">₹{stats.total.toFixed(2)}</p>
-                    </div>
-                    <div className="stats-card glass-effect p-4 text-center">
-                        <i className="fas fa-calendar text-3xl text-white mb-2"></i>
-                        <h3 className="text-white text-lg font-semibold">This Month</h3>
-                        <p className="text-white text-xl font-bold">₹{stats.thisMonth.toFixed(2)}</p>
-                    </div>
-                    <div className="stats-card glass-effect p-4 text-center">
-                        <i className="fas fa-heart text-3xl text-green-300 mb-2"></i>
-                        <h3 className="text-white text-lg font-semibold">Needs</h3>
-                        <p className="text-green-300 text-xl font-bold">₹{stats.needs.toFixed(2)}</p>
-                    </div>
-                    <div className="stats-card glass-effect p-4 text-center">
-                        <i className="fas fa-star text-3xl text-yellow-300 mb-2"></i>
-                        <h3 className="text-white text-lg font-semibold">Wants</h3>
-                        <p className="text-yellow-300 text-xl font-bold">₹{stats.wants.toFixed(2)}</p>
-                    </div>
-                </div>
-            );
-
-            const ExpenseList = () => (
-                <div className="glass-effect p-6">
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-2xl font-bold text-white">Recent Expenses</h2>
-                        <span className="text-white/70">{expenses.length} expenses</span>
-                    </div>
-                    <div className="space-y-3 max-h-96 overflow-y-auto">
-                        {expenses.map(expense => {
-                            const categoryInfo = CATEGORIES[expense.category] || CATEGORIES['Miscellaneous'];
-                            return (
-                                <div key={expense.id} className="expense-card bg-white/10 p-4 rounded-lg flex items-center justify-between">
-                                    <div className="flex items-center space-x-4">
-                                        <div 
-                                            className="category-icon"
-                                            style={{ backgroundColor: categoryInfo.color }}
-                                        >
-                                            <i className={`fas ${categoryInfo.icon}`}></i>
-                                        </div>
-                                        <div>
-                                            <h4 className="text-white font-semibold">{expense.item}</h4>
-                                            <p className="text-white/70 text-sm">
-                                                {expense.category} • {expense.date} • 
-                                                <span className={`ml-1 px-2 py-1 rounded-full text-xs ${
-                                                    expense.type === 'Need' ? 'bg-green-500/20 text-green-300' : 'bg-yellow-500/20 text-yellow-300'
-                                                }`}>
-                                                    {expense.type}
-                                                </span>
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center space-x-3">
-                                        <span className="text-white text-lg font-bold">₹{expense.amount.toFixed(2)}</span>
-                                        <div className="flex space-x-2">
-                                            <button
-                                                onClick={() => handleEdit(expense)}
-                                                className="text-white/70 hover:text-white transition-colors"
-                                            >
-                                                <i className="fas fa-edit"></i>
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(expense.id)}
-                                                className="text-red-400 hover:text-red-300 transition-colors"
-                                            >
-                                                <i className="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                        {expenses.length === 0 && (
-                            <div className="text-center py-8">
-                                <i className="fas fa-receipt text-4xl text-white/30 mb-4"></i>
-                                <p className="text-white/50">No expenses recorded yet</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            );
-
-            return (
-                <div className="max-w-6xl mx-auto">
-                    {/* Header */}
-                    <div className="glass-effect p-6 mb-6 text-center">
-                        <h1 className="text-4xl font-bold text-white mb-2">
-                            <i className="fas fa-wallet mr-3"></i>
-                            Personal Expense Tracker
-                        </h1>
-                        <p className="text-white/80">Track your spending, manage your budget</p>
-                        {isFirebaseReady ? (
-                            <div className="mt-3 bg-green-500/20 text-green-300 px-4 py-2 rounded-lg text-sm">
-                                <i className="fas fa-check-circle mr-2"></i>
-                                Connected to Firebase Cloud Database
-                            </div>
-                        ) : (
-                            <div className="mt-3 bg-blue-500/20 text-blue-300 px-4 py-2 rounded-lg text-sm">
-                                <i className="fas fa-spinner fa-spin mr-2"></i>
-                                Connecting to Firebase...
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Navigation */}
-                    <div className="glass-effect p-4 mb-6">
-                        <div className="flex flex-wrap justify-center gap-4">
-                            <button
-                                onClick={() => setCurrentView('dashboard')}
-                                className={`px-4 py-2 rounded-lg transition-colors ${
-                                    currentView === 'dashboard' ? 'bg-white/30 text-white' : 'text-white/70 hover:text-white'
-                                }`}
-                            >
-                                <i className="fas fa-chart-pie mr-2"></i>Dashboard
-                            </button>
-                            <button
-                                onClick={() => setShowForm(!showForm)}
-                                className="gradient-button px-4 py-2 rounded-lg text-white font-semibold"
-                            >
-                                <i className="fas fa-plus mr-2"></i>Add Expense
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Content */}
-                    {showForm && <ExpenseForm />}
-                    
-                    {currentView === 'dashboard' && (
-                        <>
-                            <StatsCards />
-                            <ExpenseList />
-                        </>
-                    )}
-                </div>
-            );
+                
+                updateStats();
+                renderExpenses();
+                
+            } catch (error) {
+                console.error('Error loading expenses:', error);
+                expensesListEl.innerHTML = '<div class="loading"><i class="fas fa-exclamation-triangle"></i><p>Failed to load expenses</p></div>';
+            }
         }
-
-        ReactDOM.render(<ExpenseTracker />, document.getElementById('root'));
+        
+        // Update statistics
+        function updateStats() {
+            const total = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+            const needs = expenses.filter(exp => exp.type === 'Need').reduce((sum, exp) => sum + exp.amount, 0);
+            const wants = expenses.filter(exp => exp.type === 'Want').reduce((sum, exp) => sum + exp.amount, 0);
+            
+            const now = new Date();
+            const currentMonth = expenses.filter(exp => {
+                const expDate = new Date(exp.date);
+                return expDate.getMonth() === now.getMonth() && expDate.getFullYear() === now.getFullYear();
+            }).reduce((sum, exp) => sum + exp.amount, 0);
+            
+            document.getElementById('totalAmount').textContent = `₹${total.toFixed(2)}`;
+            document.getElementById('monthAmount').textContent = `₹${currentMonth.toFixed(2)}`;
+            document.getElementById('needsAmount').textContent = `₹${needs.toFixed(2)}`;
+            document.getElementById('wantsAmount').textContent = `₹${wants.toFixed(2)}`;
+        }
+        
+        // Render expenses list
+        function renderExpenses() {
+            if (expenses.length === 0) {
+                expensesListEl.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-receipt"></i>
+                        <h3>No expenses recorded yet</h3>
+                        <p>Start by adding your first expense above</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            expensesListEl.innerHTML = expenses.map(expense => `
+                <div class="expense-item">
+                    <div class="expense-info">
+                        <h4>${expense.item}</h4>
+                        <div class="expense-meta">
+                            ${expense.category} • ${expense.date} • 
+                            <span class="expense-type ${expense.type.toLowerCase()}">${expense.type}</span>
+                        </div>
+                    </div>
+                    <div class="expense-amount">₹${expense.amount.toFixed(2)}</div>
+                    <div class="expense-actions">
+                        <button class="btn btn-edit" onclick="editExpense('${expense.id}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteExpense('${expense.id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Edit expense
+        window.editExpense = function(id) {
+            const expense = expenses.find(exp => exp.id === id);
+            if (!expense) return;
+            
+            // Fill form with expense data
+            document.getElementById('date').value = expense.date;
+            document.getElementById('category').value = expense.category;
+            document.getElementById('type').value = expense.type;
+            document.getElementById('item').value = expense.item;
+            document.getElementById('amount').value = expense.amount;
+            
+            // Update form UI
+            editingExpenseId = id;
+            document.querySelector('#expenseForm h2').textContent = 'Edit Expense';
+            document.querySelector('#addExpenseForm button[type="submit"]').innerHTML = '<i class="fas fa-save"></i> Update Expense';
+            
+            // Show form
+            expenseForm.classList.remove('hidden');
+            toggleFormBtn.innerHTML = '<i class="fas fa-minus"></i> Cancel';
+        }
+        
+        // Delete expense
+        window.deleteExpense = async function(id) {
+            if (!confirm('Are you sure you want to delete this expense?')) return;
+            
+            try {
+                await deleteDoc(doc(db, 'expenses', id));
+                loadExpenses();
+            } catch (error) {
+                console.error('Error deleting expense:', error);
+                alert('Failed to delete expense. Please try again.');
+            }
+        }
     </script>
 </body>
 </html>
