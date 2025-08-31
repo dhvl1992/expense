@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Personal Expense Tracker</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -174,6 +175,42 @@
 
         .signout-btn:hover {
             background: #374151;
+        }
+
+        .nav-tabs {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: #64748b;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .nav-tab.active {
+            background: #4f46e5;
+            color: white;
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+        }
+
+        .nav-tab:not(.active):hover {
+            background: #f8fafc;
+            color: #374151;
         }
 
         .card {
@@ -405,42 +442,6 @@
             display: none !important;
         }
 
-        .nav-tabs {
-            background: #ffffff;
-            border-radius: 12px;
-            padding: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            border: 1px solid #e2e8f0;
-            display: flex;
-            gap: 8px;
-        }
-
-        .nav-tab {
-            flex: 1;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            background: transparent;
-            color: #64748b;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-align: center;
-        }
-
-        .nav-tab.active {
-            background: #4f46e5;
-            color: white;
-            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
-        }
-
-        .nav-tab:not(.active):hover {
-            background: #f8fafc;
-            color: #374151;
-        }
-
         .chart-container {
             background: #ffffff;
             border-radius: 12px;
@@ -603,133 +604,185 @@
             </button>
         </div>
 
+        <!-- Navigation Tabs -->
+        <div id="navTabs" class="nav-tabs hidden">
+            <button class="nav-tab active" data-tab="dashboard">
+                <i class="fas fa-chart-pie"></i> Dashboard
+            </button>
+            <button class="nav-tab" data-tab="analytics">
+                <i class="fas fa-chart-bar"></i> Analytics
+            </button>
+        </div>
+
         <!-- Main App Content -->
         <div id="mainApp" class="hidden">
-            <!-- Stats Dashboard -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <i class="fas fa-rupee-sign"></i>
-                    <h3>Total Expenses</h3>
-                    <div class="amount" id="totalAmount">₹0.00</div>
-                </div>
-                <div class="stat-card">
-                    <i class="fas fa-calendar"></i>
-                    <h3>This Month</h3>
-                    <div class="amount" id="monthAmount">₹0.00</div>
-                </div>
-                <div class="stat-card">
-                    <i class="fas fa-heart"></i>
-                    <h3>Needs</h3>
-                    <div class="amount" id="needsAmount">₹0.00</div>
-                </div>
-                <div class="stat-card">
-                    <i class="fas fa-star"></i>
-                    <h3>Wants</h3>
-                    <div class="amount" id="wantsAmount">₹0.00</div>
-                </div>
-            </div>
-
-            <!-- Add Expense Form -->
-            <div class="card">
-                <button id="toggleForm" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Add New Expense
-                </button>
-                
-                <div id="expenseForm" class="form-section hidden">
-                    <h2 style="margin-bottom: 20px;">Add New Expense</h2>
-                    <form id="addExpenseForm">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="date">Date</label>
-                                <input type="date" id="date" name="date" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="category">Category</label>
-                                <select id="category" name="category" required>
-                                    <option value="">Select Category</option>
-                                    <option value="Rent/EMI">Rent/EMI</option>
-                                    <option value="Electricity Bill">Electricity Bill</option>
-                                    <option value="Internet">Internet</option>
-                                    <option value="Phone Bill">Phone Bill</option>
-                                    <option value="Insurance">Insurance (Health, Life, Vehicle)</option>
-                                    <option value="School/College Fees">School/College Fees</option>
-                                    <option value="Subscriptions">Subscriptions (Netflix, Prime, etc.)</option>
-                                    <option value="Grocery">Grocery</option>
-                                    <option value="Dining Out">Dining Out</option>
-                                    <option value="Shopping">Shopping (Clothes, Gadgets)</option>
-                                    <option value="Entertainment">Entertainment (Movies, Games)</option>
-                                    <option value="Personal Care">Personal Care (Salon, Spa)</option>
-                                    <option value="Gifts and Celebrations">Gifts and Celebrations</option>
-                                    <option value="Travel & Holidays">Travel & Holidays</option>
-                                    <option value="Bank Savings">Bank Savings</option>
-                                    <option value="Recurring Deposit">Recurring Deposit (RD)</option>
-                                    <option value="Fixed Deposit">Fixed Deposit (FD)</option>
-                                    <option value="Mutual Funds / SIP">Mutual Funds / SIP</option>
-                                    <option value="Stock Investment">Stock Investment</option>
-                                    <option value="PPF / LIC / NPS">PPF / LIC / NPS</option>
-                                    <option value="Medicines">Medicines</option>
-                                    <option value="Doctor Visits">Doctor Visits</option>
-                                    <option value="Emergency Health Fund">Emergency Health Fund</option>
-                                    <option value="Health Check-ups">Health Check-ups</option>
-                                    <option value="Baby or Family Medical Needs">Baby or Family Medical Needs</option>
-                                    <option value="Fuel">Fuel</option>
-                                    <option value="Public Transport">Public Transport</option>
-                                    <option value="Cab/Rickshaw">Cab/Rickshaw</option>
-                                    <option value="Vehicle Maintenance">Vehicle Maintenance</option>
-                                    <option value="Parking Charges">Parking Charges</option>
-                                    <option value="Courses">Courses</option>
-                                    <option value="Books">Books</option>
-                                    <option value="Online Learning Platforms">Online Learning Platforms (Udemy, Coursera)</option>
-                                    <option value="Workshop Fees">Workshop Fees</option>
-                                    <option value="House Help Salary">House Help Salary</option>
-                                    <option value="Cleaning Supplies">Cleaning Supplies</option>
-                                    <option value="Gas Cylinder">Gas Cylinder/ Bill</option>
-                                    <option value="Water Bill">Water Bill</option>
-                                    <option value="Charity">Charity</option>
-                                    <option value="Temple Donation">Temple Donation</option>
-                                    <option value="Helping Others in Village">Helping Others in Village</option>
-                                    <option value="House Utility">House Utility</option>
-                                    <option value="Office">Office</option>
-                                    <option value="Bank Charges">Bank Charges</option>
-                                    <option value="Miscellaneous">Misc. fasttag</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="type">Type</label>
-                                <select id="type" name="type" required>
-                                    <option value="Need">Need</option>
-                                    <option value="Want">Want</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="amount">Amount (Rs.)</label>
-                                <input type="number" id="amount" name="amount" step="0.01" min="0" placeholder="0.00" required>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="item">Item Description</label>
-                            <input type="text" id="item" name="item" placeholder="What did you spend on?" required>
-                        </div>
-                        <div style="margin-top: 20px;">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Add Expense
-                            </button>
-                            <button type="button" id="cancelForm" class="btn btn-secondary">
-                                <i class="fas fa-times"></i> Cancel
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Expenses List -->
-            <div class="card">
-                <h2 style="margin-bottom: 20px;">Recent Expenses</h2>
-                <div id="expensesList" class="expense-list">
-                    <div class="loading">
-                        <i class="fas fa-spinner fa-spin"></i>
-                        <p>Loading expenses...</p>
+            <!-- Dashboard Content -->
+            <div id="dashboardTab" class="tab-content">
+                <!-- Stats Dashboard -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <i class="fas fa-rupee-sign"></i>
+                        <h3>Total Expenses</h3>
+                        <div class="amount" id="totalAmount">₹0.00</div>
                     </div>
+                    <div class="stat-card">
+                        <i class="fas fa-calendar"></i>
+                        <h3>This Month</h3>
+                        <div class="amount" id="monthAmount">₹0.00</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-heart"></i>
+                        <h3>Needs</h3>
+                        <div class="amount" id="needsAmount">₹0.00</div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-star"></i>
+                        <h3>Wants</h3>
+                        <div class="amount" id="wantsAmount">₹0.00</div>
+                    </div>
+                </div>
+
+                <!-- Add Expense Form -->
+                <div class="card">
+                    <button id="toggleForm" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add New Expense
+                    </button>
+                    
+                    <div id="expenseForm" class="form-section hidden">
+                        <h2 style="margin-bottom: 20px;">Add New Expense</h2>
+                        <form id="addExpenseForm">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="date">Date</label>
+                                    <input type="date" id="date" name="date" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="category">Category</label>
+                                    <select id="category" name="category" required>
+                                        <option value="">Select Category</option>
+                                        <option value="Rent/EMI">Rent/EMI</option>
+                                        <option value="Electricity Bill">Electricity Bill</option>
+                                        <option value="Internet">Internet</option>
+                                        <option value="Phone Bill">Phone Bill</option>
+                                        <option value="Insurance">Insurance (Health, Life, Vehicle)</option>
+                                        <option value="School/College Fees">School/College Fees</option>
+                                        <option value="Subscriptions">Subscriptions (Netflix, Prime, etc.)</option>
+                                        <option value="Grocery">Grocery</option>
+                                        <option value="Dining Out">Dining Out</option>
+                                        <option value="Shopping">Shopping (Clothes, Gadgets)</option>
+                                        <option value="Entertainment">Entertainment (Movies, Games)</option>
+                                        <option value="Personal Care">Personal Care (Salon, Spa)</option>
+                                        <option value="Gifts and Celebrations">Gifts and Celebrations</option>
+                                        <option value="Travel & Holidays">Travel & Holidays</option>
+                                        <option value="Bank Savings">Bank Savings</option>
+                                        <option value="Recurring Deposit">Recurring Deposit (RD)</option>
+                                        <option value="Fixed Deposit">Fixed Deposit (FD)</option>
+                                        <option value="Mutual Funds / SIP">Mutual Funds / SIP</option>
+                                        <option value="Stock Investment">Stock Investment</option>
+                                        <option value="PPF / LIC / NPS">PPF / LIC / NPS</option>
+                                        <option value="Medicines">Medicines</option>
+                                        <option value="Doctor Visits">Doctor Visits</option>
+                                        <option value="Emergency Health Fund">Emergency Health Fund</option>
+                                        <option value="Health Check-ups">Health Check-ups</option>
+                                        <option value="Baby or Family Medical Needs">Baby or Family Medical Needs</option>
+                                        <option value="Fuel">Fuel</option>
+                                        <option value="Public Transport">Public Transport</option>
+                                        <option value="Cab/Rickshaw">Cab/Rickshaw</option>
+                                        <option value="Vehicle Maintenance">Vehicle Maintenance</option>
+                                        <option value="Parking Charges">Parking Charges</option>
+                                        <option value="Courses">Courses</option>
+                                        <option value="Books">Books</option>
+                                        <option value="Online Learning Platforms">Online Learning Platforms (Udemy, Coursera)</option>
+                                        <option value="Workshop Fees">Workshop Fees</option>
+                                        <option value="House Help Salary">House Help Salary</option>
+                                        <option value="Cleaning Supplies">Cleaning Supplies</option>
+                                        <option value="Gas Cylinder">Gas Cylinder/ Bill</option>
+                                        <option value="Water Bill">Water Bill</option>
+                                        <option value="Charity">Charity</option>
+                                        <option value="Temple Donation">Temple Donation</option>
+                                        <option value="Helping Others in Village">Helping Others in Village</option>
+                                        <option value="House Utility">House Utility</option>
+                                        <option value="Office">Office</option>
+                                        <option value="Bank Charges">Bank Charges</option>
+                                        <option value="Miscellaneous">Misc. fasttag</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="type">Type</label>
+                                    <select id="type" name="type" required>
+                                        <option value="Need">Need</option>
+                                        <option value="Want">Want</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="amount">Amount (Rs.)</label>
+                                    <input type="number" id="amount" name="amount" step="0.01" min="0" placeholder="0.00" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="item">Item Description</label>
+                                <input type="text" id="item" name="item" placeholder="What did you spend on?" required>
+                            </div>
+                            <div style="margin-top: 20px;">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Add Expense
+                                </button>
+                                <button type="button" id="cancelForm" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Expenses List -->
+                <div class="card">
+                    <h2 style="margin-bottom: 20px;">Recent Expenses</h2>
+                    <div id="expensesList" class="expense-list">
+                        <div class="loading">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>Loading expenses...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Content -->
+            <div id="analyticsTab" class="tab-content hidden">
+                <!-- Time Period Filter -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Analytics Period</h3>
+                        <div class="chart-filters">
+                            <button class="filter-btn active" data-period="currentMonth">Current Month</button>
+                            <button class="filter-btn" data-period="allTime">All Time</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category Breakdown Pie Chart -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Category Breakdown</h3>
+                    </div>
+                    <svg id="categoryChart" class="chart-svg"></svg>
+                    <div id="categoryLegend" class="chart-legend"></div>
+                </div>
+
+                <!-- Monthly Spending Bar Chart -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Monthly Spending Trend</h3>
+                    </div>
+                    <svg id="monthlyChart" class="chart-svg"></svg>
+                </div>
+
+                <!-- Need vs Want Donut Chart -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Needs vs Wants</h3>
+                    </div>
+                    <svg id="needWantChart" class="chart-svg"></svg>
                 </div>
             </div>
         </div>
@@ -765,6 +818,13 @@
         let expenses = [];
         let editingExpenseId = null;
         let currentUser = null;
+        let currentTab = 'dashboard';
+        let currentPeriod = 'currentMonth';
+        let chartData = {
+            categories: [],
+            monthly: [],
+            needWant: []
+        };
         
         // DOM elements
         const statusEl = document.getElementById('status');
@@ -776,6 +836,9 @@
         const userEmail = document.getElementById('userEmail');
         const signOutBtn = document.getElementById('signOutBtn');
         const mainApp = document.getElementById('mainApp');
+        const navTabs = document.getElementById('navTabs');
+        const dashboardTab = document.getElementById('dashboardTab');
+        const analyticsTab = document.getElementById('analyticsTab');
         const toggleFormBtn = document.getElementById('toggleForm');
         const expenseForm = document.getElementById('expenseForm');
         const addExpenseForm = document.getElementById('addExpenseForm');
@@ -834,6 +897,7 @@
                 authScreen.classList.add('hidden');
                 userInfo.classList.remove('hidden');
                 mainApp.classList.remove('hidden');
+                navTabs.classList.remove('hidden');
                 
                 // Update status
                 statusEl.className = 'status connected';
@@ -850,6 +914,7 @@
                 authScreen.classList.remove('hidden');
                 userInfo.classList.add('hidden');
                 mainApp.classList.add('hidden');
+                navTabs.classList.add('hidden');
                 
                 // Update status
                 statusEl.className = 'status connecting';
@@ -882,6 +947,22 @@
                 updateAuthUI(user);
             });
             
+            // Set up tab navigation
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    const tabName = e.target.closest('.nav-tab').dataset.tab;
+                    switchTab(tabName);
+                });
+            });
+            
+            // Set up period filters
+            document.querySelectorAll('.filter-btn[data-period]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const period = e.target.dataset.period;
+                    switchPeriod(period);
+                });
+            });
+            
             // Event listeners
             googleSignInBtn.addEventListener('click', signInWithGoogle);
             signOutBtn.addEventListener('click', signOutUser);
@@ -891,6 +972,57 @@
             
             console.log('Event listeners ready');
         });
+        
+        // Tab switching functionality
+        function switchTab(tabName) {
+            console.log('Switching to tab:', tabName);
+            
+            // Update tab buttons
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                if (tab.dataset.tab === tabName) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+            
+            // Update tab content
+            if (tabName === 'dashboard') {
+                dashboardTab.classList.remove('hidden');
+                analyticsTab.classList.add('hidden');
+            } else if (tabName === 'analytics') {
+                dashboardTab.classList.add('hidden');
+                analyticsTab.classList.remove('hidden');
+                
+                // Generate charts when analytics tab is opened
+                if (expenses.length > 0) {
+                    generateCharts();
+                }
+            }
+            
+            currentTab = tabName;
+        }
+        
+        // Period switching functionality
+        function switchPeriod(period) {
+            console.log('Switching to period:', period);
+            
+            // Update filter buttons
+            document.querySelectorAll('.filter-btn[data-period]').forEach(btn => {
+                if (btn.dataset.period === period) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            
+            currentPeriod = period;
+            
+            // Regenerate charts with new period
+            if (currentTab === 'analytics' && expenses.length > 0) {
+                generateCharts();
+            }
+        }
         
         // Toggle form visibility
         function toggleForm() {
@@ -957,6 +1089,11 @@
                 toggleForm();
                 loadExpenses();
                 
+                // Update charts if on analytics tab
+                if (currentTab === 'analytics') {
+                    setTimeout(() => generateCharts(), 100);
+                }
+                
             } catch (error) {
                 console.error('Error saving expense:', error);
                 
@@ -1003,6 +1140,11 @@
                 updateStats();
                 renderExpenses();
                 
+                // Update charts if on analytics tab
+                if (currentTab === 'analytics') {
+                    generateCharts();
+                }
+                
             } catch (error) {
                 console.error('Error loading expenses:', error);
                 
@@ -1031,6 +1173,384 @@
         
         // Make loadExpenses available globally for retry button
         window.loadExpenses = loadExpenses;
+        
+        // Data processing functions for charts
+        function processChartData() {
+            console.log('Processing chart data...');
+            
+            // Filter expenses based on current period
+            let filteredExpenses = [...expenses];
+            
+            if (currentPeriod === 'currentMonth') {
+                const now = new Date();
+                filteredExpenses = expenses.filter(exp => {
+                    const expDate = new Date(exp.date);
+                    return expDate.getMonth() === now.getMonth() && 
+                           expDate.getFullYear() === now.getFullYear();
+                });
+            }
+            
+            console.log(`Filtered to ${filteredExpenses.length} expenses for period: ${currentPeriod}`);
+            
+            // Process category data for pie chart
+            const categoryTotals = {};
+            filteredExpenses.forEach(exp => {
+                categoryTotals[exp.category] = (categoryTotals[exp.category] || 0) + exp.amount;
+            });
+            
+            chartData.categories = Object.entries(categoryTotals)
+                .map(([category, amount]) => ({ category, amount }))
+                .sort((a, b) => b.amount - a.amount);
+            
+            // Process monthly data for bar chart (always show last 6 months)
+            const monthlyTotals = {};
+            const currentDate = new Date();
+            
+            // Initialize last 6 months with 0
+            for (let i = 5; i >= 0; i--) {
+                const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+                const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                monthlyTotals[key] = 0;
+            }
+            
+            // Add actual expense data
+            expenses.forEach(exp => {
+                const expDate = new Date(exp.date);
+                const key = `${expDate.getFullYear()}-${String(expDate.getMonth() + 1).padStart(2, '0')}`;
+                if (monthlyTotals.hasOwnProperty(key)) {
+                    monthlyTotals[key] += exp.amount;
+                }
+            });
+            
+            chartData.monthly = Object.entries(monthlyTotals).map(([month, amount]) => ({
+                month,
+                amount,
+                monthName: new Date(month + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+            }));
+            
+            // Process Need vs Want data
+            const needTotal = filteredExpenses.filter(exp => exp.type === 'Need').reduce((sum, exp) => sum + exp.amount, 0);
+            const wantTotal = filteredExpenses.filter(exp => exp.type === 'Want').reduce((sum, exp) => sum + exp.amount, 0);
+            
+            chartData.needWant = [
+                { type: 'Need', amount: needTotal, color: '#15803d' },
+                { type: 'Want', amount: wantTotal, color: '#ca8a04' }
+            ].filter(item => item.amount > 0);
+            
+            console.log('Chart data processed:', chartData);
+        }
+        
+        // Generate all charts
+        function generateCharts() {
+            if (expenses.length === 0) {
+                console.log('No expenses to chart');
+                showEmptyCharts();
+                return;
+            }
+            
+            console.log('Generating charts for period:', currentPeriod);
+            
+            // Process data for current period
+            processChartData();
+            
+            // Generate individual charts
+            generateCategoryChart();
+            generateMonthlyChart();
+            generateNeedWantChart();
+        }
+        
+        // Show empty state for charts
+        function showEmptyCharts() {
+            ['categoryChart', 'monthlyChart', 'needWantChart'].forEach(chartId => {
+                const svg = d3.select(`#${chartId}`);
+                svg.selectAll("*").remove();
+                
+                svg.append("text")
+                    .attr("x", "50%")
+                    .attr("y", "50%")
+                    .attr("text-anchor", "middle")
+                    .attr("dominant-baseline", "middle")
+                    .style("fill", "#9ca3af")
+                    .style("font-size", "16px")
+                    .text("No data available");
+            });
+        }
+        
+        // Generate Category Pie Chart
+        function generateCategoryChart() {
+            const svg = d3.select("#categoryChart");
+            const container = document.getElementById("categoryChart");
+            const width = container.clientWidth;
+            const height = 300;
+            const radius = Math.min(width, height) / 2 - 40;
+            
+            svg.selectAll("*").remove();
+            svg.attr("viewBox", `0 0 ${width} ${height}`);
+            
+            if (chartData.categories.length === 0) {
+                svg.append("text")
+                    .attr("x", width / 2)
+                    .attr("y", height / 2)
+                    .attr("text-anchor", "middle")
+                    .style("fill", "#9ca3af")
+                    .style("font-size", "16px")
+                    .text("No expenses in this period");
+                return;
+            }
+            
+            const g = svg.append("g")
+                .attr("transform", `translate(${width / 2}, ${height / 2})`);
+            
+            // Color scale
+            const color = d3.scaleOrdinal()
+                .domain(chartData.categories.map(d => d.category))
+                .range(['#4f46e5', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#f97316', '#84cc16', '#ec4899', '#6b7280']);
+            
+            // Create pie layout
+            const pie = d3.pie()
+                .value(d => d.amount)
+                .sort(null);
+            
+            const arc = d3.arc()
+                .innerRadius(0)
+                .outerRadius(radius);
+            
+            const arcHover = d3.arc()
+                .innerRadius(0)
+                .outerRadius(radius + 10);
+            
+            // Draw pie slices
+            const slices = g.selectAll(".slice")
+                .data(pie(chartData.categories))
+                .enter()
+                .append("g")
+                .attr("class", "slice");
+            
+            slices.append("path")
+                .attr("d", arc)
+                .attr("fill", d => color(d.data.category))
+                .style("stroke", "white")
+                .style("stroke-width", "2px")
+                .style("cursor", "pointer")
+                .on("mouseover", function(event, d) {
+                    d3.select(this).transition().duration(200).attr("d", arcHover);
+                    showTooltip(event, d.data.category, d.data.amount);
+                })
+                .on("mouseout", function(event, d) {
+                    d3.select(this).transition().duration(200).attr("d", arc);
+                    hideTooltip();
+                });
+            
+            // Add percentage labels for larger slices
+            slices.append("text")
+                .attr("transform", d => `translate(${arc.centroid(d)})`)
+                .attr("text-anchor", "middle")
+                .style("font-size", "12px")
+                .style("font-weight", "600")
+                .style("fill", "white")
+                .text(d => {
+                    const percentage = (d.data.amount / d3.sum(chartData.categories, d => d.amount)) * 100;
+                    return percentage > 8 ? `${percentage.toFixed(0)}%` : '';
+                });
+            
+            // Generate legend
+            generateCategoryLegend(color);
+        }
+        
+        // Generate Category Legend
+        function generateCategoryLegend(colorScale) {
+            const legend = document.getElementById('categoryLegend');
+            legend.innerHTML = '';
+            
+            chartData.categories.forEach(item => {
+                const legendItem = document.createElement('div');
+                legendItem.className = 'legend-item';
+                
+                const total = chartData.categories.reduce((sum, cat) => sum + cat.amount, 0);
+                const percentage = ((item.amount / total) * 100).toFixed(1);
+                
+                legendItem.innerHTML = `
+                    <div class="legend-color" style="background-color: ${colorScale(item.category)}"></div>
+                    <span>${item.category} (${percentage}%)</span>
+                `;
+                
+                legend.appendChild(legendItem);
+            });
+        }
+        
+        // Generate Monthly Bar Chart
+        function generateMonthlyChart() {
+            const svg = d3.select("#monthlyChart");
+            const container = document.getElementById("monthlyChart");
+            const width = container.clientWidth;
+            const height = 300;
+            const margin = { top: 20, right: 30, bottom: 60, left: 60 };
+            const chartWidth = width - margin.left - margin.right;
+            const chartHeight = height - margin.top - margin.bottom;
+            
+            svg.selectAll("*").remove();
+            svg.attr("viewBox", `0 0 ${width} ${height}`);
+            
+            if (chartData.monthly.length === 0) {
+                svg.append("text")
+                    .attr("x", width / 2)
+                    .attr("y", height / 2)
+                    .attr("text-anchor", "middle")
+                    .style("fill", "#9ca3af")
+                    .style("font-size", "16px")
+                    .text("No monthly data available");
+                return;
+            }
+            
+            const g = svg.append("g")
+                .attr("transform", `translate(${margin.left}, ${margin.top})`);
+            
+            // Scales
+            const xScale = d3.scaleBand()
+                .domain(chartData.monthly.map(d => d.monthName))
+                .range([0, chartWidth])
+                .padding(0.2);
+            
+            const yScale = d3.scaleLinear()
+                .domain([0, d3.max(chartData.monthly, d => d.amount)])
+                .range([chartHeight, 0]);
+            
+            // Bars
+            g.selectAll(".bar")
+                .data(chartData.monthly)
+                .enter()
+                .append("rect")
+                .attr("class", "bar")
+                .attr("x", d => xScale(d.monthName))
+                .attr("width", xScale.bandwidth())
+                .attr("y", chartHeight)
+                .attr("height", 0)
+                .attr("fill", "#4f46e5")
+                .style("cursor", "pointer")
+                .transition()
+                .duration(800)
+                .attr("y", d => yScale(d.amount))
+                .attr("height", d => chartHeight - yScale(d.amount));
+            
+            // Add value labels on bars
+            g.selectAll(".bar-label")
+                .data(chartData.monthly)
+                .enter()
+                .append("text")
+                .attr("class", "bar-label")
+                .attr("x", d => xScale(d.monthName) + xScale.bandwidth() / 2)
+                .attr("y", d => yScale(d.amount) - 5)
+                .attr("text-anchor", "middle")
+                .style("font-size", "11px")
+                .style("font-weight", "600")
+                .style("fill", "#374151")
+                .text(d => d.amount > 0 ? `₹${d.amount.toFixed(0)}` : '');
+            
+            // X-axis
+            g.append("g")
+                .attr("transform", `translate(0, ${chartHeight})`)
+                .call(d3.axisBottom(xScale))
+                .selectAll("text")
+                .style("font-size", "11px")
+                .style("fill", "#6b7280");
+            
+            // Y-axis
+            g.append("g")
+                .call(d3.axisLeft(yScale).tickFormat(d => `₹${d}`))
+                .selectAll("text")
+                .style("font-size", "11px")
+                .style("fill", "#6b7280");
+        }
+        
+        // Generate Need vs Want Donut Chart
+        function generateNeedWantChart() {
+            const svg = d3.select("#needWantChart");
+            const container = document.getElementById("needWantChart");
+            const width = container.clientWidth;
+            const height = 300;
+            const radius = Math.min(width, height) / 2 - 40;
+            const innerRadius = radius - 50;
+            
+            svg.selectAll("*").remove();
+            svg.attr("viewBox", `0 0 ${width} ${height}`);
+            
+            if (chartData.needWant.length === 0) {
+                svg.append("text")
+                    .attr("x", width / 2)
+                    .attr("y", height / 2)
+                    .attr("text-anchor", "middle")
+                    .style("fill", "#9ca3af")
+                    .style("font-size", "16px")
+                    .text("No data for this period");
+                return;
+            }
+            
+            const g = svg.append("g")
+                .attr("transform", `translate(${width / 2}, ${height / 2})`);
+            
+            // Create donut layout
+            const pie = d3.pie()
+                .value(d => d.amount)
+                .sort(null);
+            
+            const arc = d3.arc()
+                .innerRadius(innerRadius)
+                .outerRadius(radius);
+            
+            const arcHover = d3.arc()
+                .innerRadius(innerRadius)
+                .outerRadius(radius + 8);
+            
+            // Draw donut slices
+            const slices = g.selectAll(".slice")
+                .data(pie(chartData.needWant))
+                .enter()
+                .append("g")
+                .attr("class", "slice");
+            
+            slices.append("path")
+                .attr("d", arc)
+                .attr("fill", d => d.data.color)
+                .style("stroke", "white")
+                .style("stroke-width", "3px")
+                .style("cursor", "pointer")
+                .on("mouseover", function(event, d) {
+                    d3.select(this).transition().duration(200).attr("d", arcHover);
+                })
+                .on("mouseout", function(event, d) {
+                    d3.select(this).transition().duration(200).attr("d", arc);
+                });
+            
+            // Center text showing total
+            const total = chartData.needWant.reduce((sum, d) => sum + d.amount, 0);
+            const needPercentage = chartData.needWant.find(d => d.type === 'Need')?.amount || 0;
+            const needPercent = total > 0 ? ((needPercentage / total) * 100).toFixed(0) : 0;
+            
+            g.append("text")
+                .attr("text-anchor", "middle")
+                .attr("y", -10)
+                .style("font-size", "24px")
+                .style("font-weight", "bold")
+                .style("fill", "#1f2937")
+                .text(`${needPercent}%`);
+            
+            g.append("text")
+                .attr("text-anchor", "middle")
+                .attr("y", 10)
+                .style("font-size", "14px")
+                .style("fill", "#6b7280")
+                .text("Needs");
+        }
+        
+        // Tooltip functions (mobile-friendly)
+        function showTooltip(event, category, amount) {
+            // Simple mobile-friendly tooltip - just update a status area
+            console.log(`${category}: ₹${amount.toFixed(2)}`);
+        }
+        
+        function hideTooltip() {
+            // Clear tooltip
+        }
         
         // Update statistics
         function updateStats() {
@@ -1102,7 +1622,10 @@
             document.querySelector('#expenseForm h2').textContent = 'Edit Expense';
             document.querySelector('#addExpenseForm button[type="submit"]').innerHTML = '<i class="fas fa-save"></i> Update Expense';
             
-            // Show form
+            // Show form and switch to dashboard if needed
+            if (currentTab !== 'dashboard') {
+                switchTab('dashboard');
+            }
             expenseForm.classList.remove('hidden');
             toggleFormBtn.innerHTML = '<i class="fas fa-minus"></i> Cancel';
         }
